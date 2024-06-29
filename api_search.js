@@ -1,11 +1,27 @@
+
+class BlogPostEntity{
+  
+  constructor(entry){
+    this.author = entry.author;  
+    this.content      = entry.content.$t;
+    this.contnet_type = entry.content.type;
+  }
+
+  
+
+}
+
+
 class BlogSearch{
 	constructor(){
 		this.BlogSearchInfo = new BlogSearchInfo();
 		this.BlogSearchApi  = new BlogSearchApi( this.BlogSearchInfo );
 	}
 	async run(){
+    // call response json
 		let response = await this.BlogSearchApi.call();
-		console.log(response);
+
+    // get the data for pagination and posts
 	}
 	apiUrl(){
 		return this.BlogSearchApi.url;
