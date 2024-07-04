@@ -1,4 +1,3 @@
-
 class BlogPostEntity{
 	/*
 	author    : [{…}]
@@ -39,25 +38,74 @@ class BlogAuthorEntity{
 		this.uri   = author_entry.uri.$t;
 	}
 }
-
-
 class BlogSearch{
-	constructor(){
-		this.BlogSearchInfo = new BlogSearchInfo();
+	constructor( object = {} ){
+		this.BlogSearchInfo = new BlogSearchInfo( object );
+		this.BlogPagination = new  
 		this.BlogSearchApi  = new BlogSearchApi( this.BlogSearchInfo );
 		this.BlogPosts      = [];
 	}
 	async run(){
 		// call response json
 		let response = await this.BlogSearchApi.call();
+		// start building the entity data
+		if(response.feed !== undefined){
+			// get the data for pagination and posts
 
-		// get the data for pagination and posts
-		console.log(  )
+		} else {
+			
+		}
+	}
+	resetEntity(){
+		this.BlogPosts = [];
+	}
+	// entry = response.entry
+	buildEntity(entry){
+
+	}
+}
+class Queries {
+	constructor(object){
+		this.queries = {};
+	}
+	fill( path = '?' ){
+		for( let key in queries ){
+			if( path.length != 1 ) path += '&';
+			if( Array.isArray(queries[key]) ) {
+				for( let value of queries[key] ) {
+					if( path.length != 1 ) path += '&';
+					path += key + '=' + value;          
+				}
+			} else {
+				path += key + '=' + queries[key];          
+			}
+		}
+		return path;
+	}
+	build(object = {}){
+		for( let key in Object.fromEntries(object.entries()) ){
+			if ( !this.validation(key,this.queries[key]) ) continue;	
+			this.queries[key] = object[key];
+		}
+	}
+	validation( key,value ) {
+		// implement your validation method here
+		return true; 	
+	}
+	reset(){
+		this.queries = {};
+	}
+}
+class BlogPagination{
+	constructor(object){
+			
+	}
+	build(blog_info){
+		console.log(blog_info);
 	}
 }
 class BlogSearchInfo{
-	// This class is entity to the information that the
-	// blogger has, like query and etc
+	// This class is entity to the information that the blogger has, like query and etc
 	constructor(location = window.location){
 		this.host     = location.host;
 		this.hostname = location.hostname;
@@ -70,7 +118,6 @@ class BlogSearchInfo{
 		this.reset();
 		this.build();
 	}  
-
 	// build queries
 	validator( key,value ) {
 		if(key == 'current-page' && value <= 0) return false;  
@@ -94,7 +141,6 @@ class BlogSearchInfo{
 		if(paths[1] == 'search' && paths[2] == 'label')
 			this.label = paths[3];
 	}
-
 	// getter setter
 	get(key){
 		return this[key];
@@ -108,6 +154,7 @@ class BlogSearchInfo{
 		}; 
 	}
 }
+
 class BlogSearchApi{
 	constructor(blog_info){
 		this.url      = '';
