@@ -1,0 +1,1 @@
+new BlogSearch().run();

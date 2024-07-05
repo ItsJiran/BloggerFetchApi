@@ -1,20 +1,23 @@
 class BlogSearch{
 	constructor( object = {} ){
 		this.BlogSearchInfo = new BlogSearchInfo( object );
-		// this.BlogPagination = new  
 		this.BlogSearchApi  = new BlogSearchApi( this.BlogSearchInfo );
-		this.BlogPosts      = [];
+		this.BlogSearchQueries = new BlogSearchQueries( object.search_settings );
+		this.BlogPagination    = new BlogPagination( object.pagination_settings );
+		this.BlogPosts         = [];
 	}
 	async run(){
+		console.log(this.BlogSearchApi, this.BlogSearchQueries);
+		/*
 		// call response json
 		let response = await this.BlogSearchApi.call();
-		conosole.log(response);
+		console.log(response);
 		// start building the entity data
 		if(response.feed !== undefined){
 			// get the data for pagination and posts
 		} else {
 			
-		}
+		}*/
 	}
 	resetEntity(){
 		this.BlogPosts = [];
