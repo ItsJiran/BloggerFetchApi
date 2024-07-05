@@ -5,25 +5,41 @@ class BlogSearch{
 		this.BlogSearchQueries = new BlogSearchQueries( object.search_settings );
 		this.BlogPagination    = new BlogPagination( object.pagination_settings );
 		this.BlogPosts         = [];
+
+		// build the each queries from the current window params
+		this.BlogSearchQueries.build();
+		this.BlogPagination.build();
 	}
+
 	async run(){
-		console.log(this.BlogSearchApi, this.BlogSearchQueries);
-		/*
+		// build the targeted api_url
+		this.BlogSearchApi.build( this.BlogSearchInfo, this.buildApiQueries() );
+		console.log(this.BlogSearchApi.url);
+
 		// call response json
 		let response = await this.BlogSearchApi.call();
 		console.log(response);
-		// start building the entity data
-		if(response.feed !== undefined){
-			// get the data for pagination and posts
-		} else {
-			
-		}*/
+		
+		if(response.feed == undefined){
+			console.error('response error');
+			return;
+		}
+
+		// handle response feed;
+		this.BlogPagination.buildByFeeds(response);
 	}
+
+	buildApiQueries(path = '?'){
+		path = this.BlogSearchQueries.fillApi(path);
+		path = this.BlogPagination.fillApi(path);
+		return path;	
+	}
+	buildEntity(entry){
+
+	}
+
 	resetEntity(){
 		this.BlogPosts = [];
-	}
-	// entry = response.entry
-	buildEntity(entry){
 	}
 }
 class BlogSearchInfo{
@@ -47,7 +63,6 @@ class BlogSearchInfo{
 class BlogSearchApi{
 	constructor(blog_info){
 		this.url      = '';
-		this.queries  = '';
 		this.path     = '';
 		this.target   = '/feeds/posts/default';
 		this.build(blog_info);
@@ -66,8 +81,7 @@ class BlogSearchApi{
 		});
 		return response.json();
 	}
-	build( blog_info ) {
-		// /1|l0v3|u|354\ 
+	build( blog_info, api_queries = '?' ) {
 		if(blog_info instanceof BlogSearchInfo == false) 
 			throw Error('Blog info should be instance of BlogSearchInfo');
 
@@ -75,6 +89,6 @@ class BlogSearchApi{
 		if(blog_info.label != undefined) this.path = '/-/' + blog_info.label;
 
 		// return combine with the api_path
-		this.url = blog_info.origin + this.target + this.path + this.queries;
+		this.url = blog_info.origin + this.target + this.path + api_queries;
 	}
 }
