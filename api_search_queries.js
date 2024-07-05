@@ -1,13 +1,13 @@
-class Queries {
-	constructor(object){
-		init(object.queries);
-		initRules(object.rules);
+	class Queries {
+	constructor(object = {}){
+		this.init(object.queries);
+		this.initRules(object.rules);
 	}
 
 	// this method is responsible for building the object proerties
 	// the init method can be used either to reset the current queries
 	// or to initalize the object
-	init(object = [}){
+	init(object = {}){
 		this.queries = {
 			...object,
 		};
@@ -18,26 +18,64 @@ class Queries {
 		};
 	}
 	build(object = {}){
-		for( let key in Object.fromEntries(object.entries()) ){
+		for( let key in Object.fromEntries(object.entries()) ) {
 			this.setQueries( key, object[key] );
 		}
 	}
 	buildByUrl(path = window.location.search){
 		const params = new URLSearchParams(window.location.search);
-		for ( let key in Object.fromEntries( this.queries ) ) {
+		for ( let key in this.queries ) {
 			if( params.get(key) != undefined ) 
 				this.setQueries( key,params.get(key) );
 		}
 	}	
-	
+
 	// this method is responsible for building query url
 	// it can be used either for api or building for the new pagination
-	fill( path = '?' ){
-		for( let key in queries ){
+	fillApi( path = '?' ){
+		for( let key in this.queries ){
 			let fill_key = key;
 
 			// skip if shouldn't filled
-			if( !this.isFill(queries[key] ) continue;
+			if( !this.isFillApi(key) || !this.fillValidation(key,this.queries[key]) )
+				continue;
+			
+			// if converted 
+			if( this.isConverted(key) != undefined ) 
+				fill_key = this.isConverted(key); 
+
+			// prevent weird url
+			if( path.length != 1 ) path += '&';
+
+			// if not array
+			if( !Array.isArray(this.queries[key]) ) 
+				path += fill_key + '=' + this.middleware(key,this.queries[key]);          
+
+			// if array
+			if( Array.isArray(this.queries[key]) ) {
+				for( let value of this.queries[key] ) {
+					if( path.length != 1 ) path += '&';
+					path += fill_key + '=' + this.middleware(key,value);          
+				}
+			} 
+			
+		}
+		return path;
+	}
+	isFillApi(key){		
+		if( this.rules[key] != undefined ) {			
+			if( !this.rules[key].fillApi ) 
+				return false;
+		}
+		return true;
+	}
+	fill( path = '?' ){
+		for( let key in this.queries ){
+			let fill_key = key;
+
+			// skip if shouldn't filled
+			if( !this.isFill( key ) || !this.fillValidation(key,this.queries[key]) ) 
+				continue;
 
 			// if converted 
 			if( this.isConverted(key) != undefined ) 
@@ -47,16 +85,16 @@ class Queries {
 			if( path.length != 1 ) path += '&';
 
 			// if not array
-			if( !Array.isArray(queries[key]) ) 
-				path += fill_key + '=' + this.middleware(key,queries[key]);          
+			if( !Array.isArray(this.queries[key]) ) 
+				path += fill_key + '=' + this.middleware(key,this.queries[key]);          
 
 			// if array
-			if( Array.isArray(queries[key]) ) {
-				for( let value of queries[key] ) {
+			if( Array.isArray(this.queries[key]) ) {
+				for( let value of this.queries[key] ) {
 					if( path.length != 1 ) path += '&';
 					path += fill_key + '=' + this.middleware(key,value);          
 				}
-			} 
+			} 			
 		}
 		return path;
 	}
@@ -85,6 +123,9 @@ class Queries {
 	}
 
 	// fill support method
+	fillValidation(key,value){
+		return true;
+	}
 	validation( key,value ) {
 		return true;
 	}
@@ -96,9 +137,9 @@ class BlogPagination extends Queries {
 	// method overloading 
 	init(object = {}){
 		this.queries = {
-			current_page : 1,
-			start_index  : 1,
-			max_result   : 6,
+			current_page  : 1,
+			start_index   : 1,
+			max_results   : 6,
 			total_results : -1,
 			...object
 		}
@@ -116,62 +157,28 @@ class BlogPagination extends Queries {
 			},
 			// queries for url
 			current_page : {
+				fill:true,
 				fillApi:false,
 			},
 			// queries for api
 			start_index : {
 				converted:'start-index',
 				fill:false,
+				fillApi:true,
 			},
-			max_result : {
-				converted:'max-result',
+			max_results : {
+				converted:'max-results',
 				fill:false,
+				fillApi:true,
 			},
 			...object
 		}
-	}
-	
-	// Method Overloading
-	fillApi( path = '?' ){
-		for( let key in queries ){
-			let fill_key = key;
-
-			// skip if shouldn't filled
-			if( !this.isFillApi(queries[key] ) continue;
-
-			// if converted 
-			if( this.isConverted(key) != undefined ) 
-				fill_key = this.isConverted(key); 
-
-			// prevent weird url
-			if( path.length != 1 ) path += '&';
-
-			// if not array
-			if( !Array.isArray(queries[key]) ) 
-				path += fill_key + '=' + this.middleware(key,queries[key]);          
-
-			// if array
-			if( Array.isArray(queries[key]) ) {
-				for( let value of queries[key] ) {
-					if( path.length != 1 ) path += '&';
-					path += fill_key + '=' + this.middleware(key,value);          
-				}
-			} 
-		}
-		return path;
-	}
-	isFillApi(key){
-		if( this.rules[key] != undefined ) {
-			if( !this.rules[key].fillApi ) 
-				return false;
-		}
-		return true;
 	}
 
 	// middleware
 	middleware(key,value){
 		if(key == 'start_index')
-			value = this.start_index + ( ( this.current_page - 1 ) * this.max_results );
+			value = parseInt(this.queries['start_index']) + ( ( parseInt(this.queries['current_page']) - 1 ) * parseInt(this.queries['max_results']) );
 		return value;
 	}
 
@@ -180,10 +187,10 @@ class BlogPagination extends Queries {
 	// blogger rss feeds.
 	buildByFeeds(response = {}){
 		if(response.feed) throw Error("response feeds property should'nt empty");
-	
+
 		// we expect an response.feed object
 		let feeds = response.feed;
-		
+
 		// we start consuming this object proerty		
 		// openSearch$itemsPerPage : {$t: '2'}
 		// openSearch$startIndex   : {$t: '1 }
@@ -212,15 +219,19 @@ class BlogSearchQueries extends Queries {
 	initRules(object = {}){
 		this.rules = {
 			title : {
+				fill:true,
+				fillApi:true,
 			},
 			label : {
+				fill:true,
+				fillApi:true,
 			},
 			...object
 		}
 	}
-	
-	// fill method overloading
-	validation(key,value){
+
+	// validation for fill
+	fillValidation(key,value){
 		if(key == 'title' && value == '') return false;
 		if(key == 'label' && value == '') return false;
 		return true;
