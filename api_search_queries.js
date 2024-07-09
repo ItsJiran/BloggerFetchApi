@@ -1,4 +1,4 @@
-	class Queries {
+class Queries {
 	constructor(object = {}){
 		this.init(object.queries);
 		this.initRules(object.rules);
@@ -32,7 +32,7 @@
 
 	// this method is responsible for building query url
 	// it can be used either for api or building for the new pagination
-	fillApi( path = '?' ){
+	fillApi(path = '?'){
 		for( let key in this.queries ){
 			let fill_key = key;
 
@@ -69,7 +69,7 @@
 		}
 		return true;
 	}
-	fill( path = '?' ){
+	fill(path = '?'){
 		for( let key in this.queries ){
 			let fill_key = key;
 
@@ -186,7 +186,7 @@ class BlogPagination extends Queries {
 	// because this class need the data of the total post that provided by the
 	// blogger rss feeds.
 	buildByFeeds(response = {}){
-		if(response.feed) throw Error("response feeds property should'nt empty");
+		if(response.feed) throw Error("response feeds property shouldn't empty");
 
 		// we expect an response.feed object
 		let feeds = response.feed;
@@ -211,7 +211,6 @@ class BlogSearchQueries extends Queries {
 	// method overloading 
 	init(object = {}){
 		this.queries = {
-			label : '',
 			title : '',
 			...object
 		}
@@ -222,10 +221,6 @@ class BlogSearchQueries extends Queries {
 				fill:true,
 				fillApi:true,
 			},
-			label : {
-				fill:true,
-				fillApi:true,
-			},
 			...object
 		}
 	}
@@ -233,7 +228,6 @@ class BlogSearchQueries extends Queries {
 	// validation for fill
 	fillValidation(key,value){
 		if(key == 'title' && value == '') return false;
-		if(key == 'label' && value == '') return false;
 		return true;
 	}
 }

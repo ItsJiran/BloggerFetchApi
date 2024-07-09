@@ -1,3 +1,26 @@
+class Printer{
+	constructor(object = {}){
+		this.container = object.container ? object.container : document.getElementById('BSearch-container');
+		this.template  = object.template ? object.template : `<div></div>`;
+		this.events = object.property ? object.property : {};
+		this.embeds = object.embeds   ? object.embeds   : {};
+	}
+	print(entity){
+		// implement your print method here
+	}
+	printEmbeds(keys,element,entity){
+		// this method replace 
+	}
+	printEvents(keys,element,entity){
+
+	}
+}
+
+class BlogPostPrinter extends Printer{
+	constructor(object = {}){
+		super(object);
+	}
+}
 class BlogPostEntity{
 	/*
 	author    : [{…}]
@@ -10,18 +33,35 @@ class BlogPostEntity{
 	updated   : {$t: '2024-06-27T21:32:54.257-07:00'}
 	*/
 	constructor(entry){
+		super(entry);
 		this.authors      = this.buildAuthors(entry.author);  
 		this.content      = entry.content.$t;
 		this.content_type = entry.content.type;
 		this.published    = entry.published.$t;
 		this.updated 	  = entry.updated.$t;	
 		this.links        = entry.link;
+		this.elements     = document.createElement('div');
+		this.buildElements();
+		this.embeds = {
+			'published' : {
+				
+			},
+			'updated' : {
+				
+			},
+			'links' : {
+
+			},
+		}
 	}
 	buildAuthors(authors){
 		let cont = [];
 		for(let author of authors)
 			cont.push( new BlogAuthorEntity(author) );		
 		return cont;
+	}
+	buildElements(){
+		
 	}
 }
 class BlogAuthorEntity{
@@ -32,9 +72,16 @@ class BlogAuthorEntity{
 	uri      : {$t: 'http://www.blogger.com/profile/07000369991075541029'}
 	*/
 	constructor(author_entry){
+		super(author_entry);
 		this.email = author_entry.email.$t;
 		this.image = author_entry.gd$image;
 		this.name  = author_entry.name.$t;
 		this.uri   = author_entry.uri.$t;
+		this.embeds = [
+			'email',
+			'image',
+			'name',
+			'uri',
+		]
 	}
 }

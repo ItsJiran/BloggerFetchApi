@@ -1,10 +1,16 @@
 class BlogSearch{
 	constructor( object = {} ){
-		this.BlogSearchInfo = new BlogSearchInfo( object );
-		this.BlogSearchApi  = new BlogSearchApi( this.BlogSearchInfo );
+		this.BlogSearchInfo    = new BlogSearchInfo( object );
+		this.BlogSearchApi     = new BlogSearchApi( this.BlogSearchInfo );
 		this.BlogSearchQueries = new BlogSearchQueries( object.search_settings );
-		this.BlogPagination    = new BlogPagination( object.pagination_settings );
-		this.BlogPosts         = [];
+
+		// Entity or Filtered Element
+		this.BlogPosts      = [];
+		this.BlogPagination = new BlogPagination( object.pagination_settings );
+
+		// container for printer
+		this.posts_container      = object.posts_container ? object.posts_container : document.getElementById('BSearch-posts_container');
+		this.pagination_container = object.pagination_container ? object.pagination_container : document.getElementById('BSearch-pagination_container');
 
 		// build the each queries from the current window params
 		this.BlogSearchQueries.build();
@@ -21,12 +27,19 @@ class BlogSearch{
 		console.log(response);
 		
 		if(response.feed == undefined){
-			console.error('response error');
+			console.error("response shouldn't be empty");
 			return;
 		}
 
+		// reset 
+		this.resetEntity();	
+
 		// handle response feed;
-		this.BlogPagination.buildByFeeds(response);
+		this.buildPostEntity(response);
+		this.buildPaginationEntity(response);
+
+		// print entity to the dom
+		this.printEntity();
 	}
 
 	buildApiQueries(path = '?'){
@@ -34,12 +47,17 @@ class BlogSearch{
 		path = this.BlogPagination.fillApi(path);
 		return path;	
 	}
-	buildEntity(entry){
-
+	buildPostEntity(response){
+		for(let posts of response.feeds.entry){
+			
+		}	
+	}
+	buildPaginationEntity(response){
+		this.BlogPagination.buildByFeeds(response);
 	}
 
 	resetEntity(){
-		this.BlogPosts = [];
+		this.BlogPosts  = [];
 	}
 }
 class BlogSearchInfo{
