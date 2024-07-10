@@ -479,8 +479,6 @@ class BlogSearch{
 
 		// call response json
 		let response = await this.BlogSearchApi.call();
-		console.log(response);
-		
 		if(response.feed == undefined){
 			console.error("response shouldn't be empty");
 			return;
@@ -492,10 +490,10 @@ class BlogSearch{
 		// handle response feed;
 		this.buildPostEntity(response);
 		this.buildPaginationEntity(response);
-		console.log(this.BlogPosts);
 
 		// print entity to the dom
-		this.printEntity();
+		this.printPostsEntity();
+		this.printPaginationEntity();
 	}
 
 	buildApiQueries(path = '?'){
@@ -513,7 +511,7 @@ class BlogSearch{
 		this.BlogPagination.buildByFeed(response);
 	}
 
-	printEntity(){
+	printPostsEntity(){
 		for(let post of this.BlogPosts){
 			let element = this.posts_printer.build(post);
 			this.posts_printer.print(element);
