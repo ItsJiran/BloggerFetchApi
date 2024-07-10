@@ -75,7 +75,7 @@ class BlogPostEntity{
 		this.unit_elements = [
 			new UnitElements({
 				selector : '',
-				elements :	this.elements.children,
+				elements :	this.elements.getElementsByTagName('p'),
 			})
 		];
 	}
@@ -139,8 +139,8 @@ class Printer{
 		return new DOMParser().parseFromString(raw, 'text/html').body.firstElementChild;
 	}
 	buildAdditional(element,entity){
-		element = this.addEvents(element,entity);
 		element = this.addEmbedsElements(element,entity);
+		element = this.addEvents(element,entity);
 		return element;
 	}
 
@@ -175,6 +175,7 @@ class Printer{
 	addEvents(element){
 		// this method print the targeted event to the element
 		for(let unit of this.unit_events){
+			console.log(unit);
 			if(unit.selector == ''){
 				unit.executeSelf(element);
 			} else {
@@ -193,9 +194,12 @@ class BlogPostPrinter extends Printer{
 				{{title}}
 			</article>
 		`;
-		this.events = object.events ? object.events : {
-
-		};
+		this.unit_events = object.unit_events ? object.unit_events : [
+			new UnitEvents({
+				selector:'',
+				events:[ new UnitEvent() ],
+			}),
+		];
 	}
 }
 
@@ -461,6 +465,7 @@ class BlogSearch{
 
 		// printer instance
 		this.posts_printer = object.posts_printer ? object.posts_printer : new BlogPostPrinter();
+		this.pagination_printer = object.pagination_printer ? object.pagination_printer : undefined;
 
 		// build the each queries from the current window params
 		this.BlogSearchQueries.buildByUrl();
