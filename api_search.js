@@ -1,3 +1,420 @@
+// +===============================================================+
+// ---------------------- BLOG SEARCH ENTITY -----------------------
+// +===============================================================+
+class BlogPostEntity{
+	/*
+	author    : [{…}]
+	content   : {type: 'html', $t: '<p>&nbsp;<span style="background-color: white; fon…, ut interdum velit lobortis eu.</span>&nbsp;</p>'}
+	id        : {$t: 'tag:blogger.com,1999:blog-5950330201730594593.post-5916909838795192142'}
+	link      : (5) [{…}, {…}, {…}, {…}, {…}]
+	published : {$t: '2024-06-27T21:32:00.002-07:00'}
+	thr$total : {$t: '0'} 
+	title     : {type: 'text', $t: 'Testing Artikel 231456'}
+	updated   : {$t: '2024-06-27T21:32:54.257-07:00'}
+	*/
+	constructor(entry){
+		this.authors      = this.buildAuthors(entry.author);  
+		this.content      = entry.content.$t;
+		this.content_type = entry.content.type;
+		this.published    = entry.published.$t;
+		this.updated 	  = entry.updated.$t;	
+		this.links        = entry.link;
+
+		this.embeds = ['published','content','updated','link'];
+		this.embeds_element = [
+
+		];
+
+		this.buildElements();
+	}
+	buildAuthors(authors){
+		let cont = [];
+		for(let author of authors)
+			cont.push( new BlogAuthorEntity(author) );		
+		return cont;
+	}
+	buildElements(){
+		this.elements = document.createElement('div');
+		
+	}
+}
+class BlogAuthorEntity{
+	/*
+	email    : {$t: 'noreply@blogger.com'}
+	gd$image : {rel: 'http://schemas.google.com/g/2005#thumbnail', width: '32', height: '17', src: '//blogger.googleusercontent.com/img/b/R29vZ2xl/AVv…u8TH_TkhcmSEWC5uR73LQZbpVCazJ/s220/cs-snedel.webp'}
+	name     : {$t: 'Gilang Ramadhan'}
+	uri      : {$t: 'http://www.blogger.com/profile/07000369991075541029'}
+	*/
+	constructor(author_entry){
+		super(author_entry);
+		this.email = author_entry.email.$t;
+		this.image = author_entry.gd$image;
+		this.name  = author_entry.name.$t;
+		this.uri   = author_entry.uri.$t;
+
+		this.embeds = [
+			'email',
+			'image',
+			'name',
+			'uri',
+		]
+	}
+}
+
+
+// +===============================================================+
+// ---------------------- BLOG UNITS PRINTER -----------------------
+// +===============================================================+
+class UnitEvent{
+	constructor(object = {}){
+		this.trigger = object.trigger ? object.trigger : 'click';
+		this.handler = object.handler ? object.handler : (e)=>{console.log(e)};
+	}
+}
+class UnitEvents{
+	constructor(object = {}){
+		// target should be class or id or query selector
+		this.selector = object.selector ? object.selector : '';
+		this.events = [];
+	}
+	execute(elements){
+		// expect a nodelist
+		for(let element of elements)
+			for(let event of this.events)
+				element.addEventListener(event.trigger,event.handler);
+	}
+}
+class UnitElements{
+	constructor(object = {}){
+		this.selector = object.selector ? object.selector : '';
+		this.elements = [];
+	}
+	execute(elements){
+		// expect a nodelist
+		for(let element of elements)
+			for(let subelement of this.elements)
+				element.appendChild(subelement);
+	}
+}
+
+// +===============================================================+
+// --------------------- BLOG SEARCH PRINTER -----------------------
+// +===============================================================+
+class Printer{
+	constructor(object = {}){
+		this.container = object.container ? object.container : document.getElementById('BSearch-container');
+		this.template  = object.template ? object.template : `<div></div>`;
+		this.events = object.events ? object.events : [];
+	}
+
+	// +----------- BUILDING FEATURE ------------+
+	build(entity){
+		// implement your print method here
+		let raw      = this.buildTemplate(entity);
+		let element  = this.buildElements(raw,entity)
+		let finished = this.buildAdditional(element,entity);
+		return finished;
+	}
+	buildTemplate(entity){
+		let tmp = this.template;
+		tmp = this.addEmbeds(tmp,entity);
+		return tmp;
+	}
+	buildElement(raw = this.buildTemplate()){
+		return new DOMParser().parseFromString(raw, 'text/html').body.firstElementChild;
+	}
+	buildAdditional(element,entity){
+		element = this.addEvents(element);
+		element = this.addEmbedsElements(entity);
+		return element;
+	}
+
+	// +----------- FINISHING FEATURE ------------+
+	print(element,container = this.container){
+		container.appendChild(element);
+	}
+
+	// +----------- ADITIONAL FEATURE ------------+
+	addEmbeds(raw = this.template, entity){
+		// this method replace {{keys}}
+		for(let key of entity.embeds){
+			raw = raw.replaceAll('{{'+key+'}}',entity);
+		}
+		return raw;
+	}
+	addEmbedsElements(element,entity){
+		// this method target an element that exist in the entity.embeds_element
+		// that list all the elements, that will be get from the entity.
+		// elements and put it in the targeted element argument.
+		for(let unit of entity.embeds_element){
+			let queries = element.querySelectorAll(unit.selector);
+			for(let query of queries){
+				unit.execute(query);
+			}
+		}
+	}
+	addEvents(element){
+		// this method print the targeted event to the element
+		for(let unit of this.events){
+			let queries = element.querySelectorAll(unit.selector);
+			for(let query of queries){
+				unit.execute(query);
+			}
+		}
+	}
+}
+class BlogPostPrinter extends Printer{
+	constructor(object = {}){
+		super(object);
+		this.template = object.template ? object.template : `
+		`;
+		this.events = object.events ? object.events : {
+
+		};
+	}
+}
+
+// +===============================================================+
+// --------------------- BLOG SEARCH QUERIES -----------------------
+// +===============================================================+
+class Queries {
+	constructor(object = {}){
+		this.init(object.queries);
+		this.initRules(object.rules);
+	}
+
+	// this method is responsible for building the object proerties
+	// the init method can be used either to reset the current queries
+	// or to initalize the object
+	init(object = {}){
+		this.queries = {
+			...object,
+		};
+	}
+	initRules(object = {}){
+		this.rules = {
+			...object,
+		};
+	}
+	build(object = {}){
+		for( let key in Object.fromEntries(object.entries()) ) {
+			this.setQueries( key, object[key] );
+		}
+	}
+	buildByUrl(path = window.location.search){
+		const params = new URLSearchParams(window.location.search);
+		for ( let key in this.queries ) {
+			if( params.get(key) != undefined ) 
+				this.setQueries( key,params.get(key) );
+		}
+	}	
+
+	// this method is responsible for building query url
+	// it can be used either for api or building for the new pagination
+	fillApi(path = '?'){
+		for( let key in this.queries ){
+			let fill_key = key;
+
+			// skip if shouldn't filled
+			if( !this.isFillApi(key) || !this.fillValidation(key,this.queries[key]) )
+				continue;
+			
+			// if converted 
+			if( this.isConverted(key) != undefined ) 
+				fill_key = this.isConverted(key); 
+
+			// prevent weird url
+			if( path.length != 1 ) path += '&';
+
+			// if not array
+			if( !Array.isArray(this.queries[key]) ) 
+				path += fill_key + '=' + this.middleware(key,this.queries[key]);          
+
+			// if array
+			if( Array.isArray(this.queries[key]) ) {
+				for( let value of this.queries[key] ) {
+					if( path.length != 1 ) path += '&';
+					path += fill_key + '=' + this.middleware(key,value);          
+				}
+			} 
+			
+		}
+		return path;
+	}
+	isFillApi(key){		
+		if( this.rules[key] != undefined ) {			
+			if( !this.rules[key].fillApi ) 
+				return false;
+		}
+		return true;
+	}
+	fill(path = '?'){
+		for( let key in this.queries ){
+			let fill_key = key;
+
+			// skip if shouldn't filled
+			if( !this.isFill( key ) || !this.fillValidation(key,this.queries[key]) ) 
+				continue;
+
+			// if converted 
+			if( this.isConverted(key) != undefined ) 
+				fill_key = this.isConverted(key); 
+
+			// prevent weird url
+			if( path.length != 1 ) path += '&';
+
+			// if not array
+			if( !Array.isArray(this.queries[key]) ) 
+				path += fill_key + '=' + this.middleware(key,this.queries[key]);          
+
+			// if array
+			if( Array.isArray(this.queries[key]) ) {
+				for( let value of this.queries[key] ) {
+					if( path.length != 1 ) path += '&';
+					path += fill_key + '=' + this.middleware(key,value);          
+				}
+			} 			
+		}
+		return path;
+	}
+	isFill(key){
+		if( this.rules[key] != undefined ) {
+			if( !this.rules[key].fill ) 
+				return false;
+		}
+		return true;
+	}
+	isConverted(key){
+		if( this.rules[key] != undefined ) {
+			if ( this.rules[key].converted != undefined ) 
+				return this.rules[key].converted;
+		} 
+		return undefined;
+	}
+
+	// implement your validation method here
+	getQueries(key){
+		this.queries[key];
+	}
+	setQueries(key,value){
+		if(this.validation(key,value)) 
+			this.queries[key] = value;
+	}
+
+	// fill support method
+	fillValidation(key,value){
+		return true;
+	}
+	validation( key,value ) {
+		return true;
+	}
+	middleware(key, value){
+		return value;
+	}
+}
+class BlogPagination extends Queries { 
+	// method overloading 
+	init(object = {}){
+		this.queries = {
+			current_page  : 1,
+			start_index   : 1,
+			max_results   : 6,
+			total_results : -1,
+			...object
+		}
+	}
+	initRules(object = {}){
+		this.rules = {
+			// queries for data pagination
+			total_results : {
+				fill:false,
+				fillApi:false,
+			},
+			total_page : {
+				fill:false,
+				fillApi:false,
+			},
+			// queries for url
+			current_page : {
+				fill:true,
+				fillApi:false,
+			},
+			// queries for api
+			start_index : {
+				converted:'start-index',
+				fill:false,
+				fillApi:true,
+			},
+			max_results : {
+				converted:'max-results',
+				fill:false,
+				fillApi:true,
+			},
+			...object
+		}
+	}
+
+	// middleware
+	middleware(key,value){
+		if(key == 'start_index')
+			value = parseInt(this.queries['start_index']) + ( ( parseInt(this.queries['current_page']) - 1 ) * parseInt(this.queries['max_results']) );
+		return value;
+	}
+
+	// on blog pagination this method should expect a response object
+	// because this class need the data of the total post that provided by the
+	// blogger rss feeds.
+	buildByFeeds(response = {}){
+		if(response.feed) throw Error("response feeds property shouldn't empty");
+
+		// we expect an response.feed object
+		let feeds = response.feed;
+
+		// we start consuming this object proerty		
+		// openSearch$itemsPerPage : {$t: '2'}
+		// openSearch$startIndex   : {$t: '1 }
+		// openSearch$totalResults : {$t: '4'}
+		let totalResults = feeds.openSearch$totalResults;
+		let startIndex   = feeds.openSearch$startIndex;
+		let itemsPerPage = feeds.openSearch$itemsPerPage;
+
+		// Formula 
+		// the goal is to calculate itemsPerPage / startIndex / Total Result -> CurrentPage / TotalPage
+		// TotalPage         = total_result / items_perpage
+		// CurrentPage_Index = TotalPage + 1 
+		this.setQueries('total_page', totalResults / itemPerPage);
+		this.setQueries('total_results', totalResults);
+	}
+}
+class BlogSearchQueries extends Queries { 
+	// method overloading 
+	init(object = {}){
+		this.queries = {
+			title : '',
+			...object
+		}
+	}
+	initRules(object = {}){
+		this.rules = {
+			title : {
+				fill:true,
+				fillApi:true,
+			},
+			...object
+		}
+	}
+
+	// validation for fill
+	fillValidation(key,value){
+		if(key == 'title' && value == '') return false;
+		return true;
+	}
+}
+
+
+// +===============================================================+
+// ------------------------ BLOG SEARCH ----------------------------
+// +===============================================================+
 class BlogSearch{
 	constructor( object = {} ){
 		this.BlogSearchInfo    = new BlogSearchInfo( object );
@@ -110,3 +527,10 @@ class BlogSearchApi{
 		this.url = blog_info.origin + this.target + this.path + api_queries;
 	}
 }
+
+// +===============================================================+
+// ------------------------ BLOG RUNTIME ---------------------------
+// +===============================================================+
+
+console.log('test');
+new BlogSearch().run();
