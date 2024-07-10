@@ -1,0 +1,31 @@
+<b:if cond='data:view.isMultipleItems'>
+        <title><data:blog.pageTitle/></title>
+    <b:else/>
+        <b:if cond='!data:view.isError'>
+            <title><data:blog.pageName/> - <data:blog.title/></title>
+        </b:if>
+</b:if>
+
+<b:if cond='data:view.isError'>
+    <title>Page Not Found - <data:blog.title/></title>
+</b:if>
+
+<b:if cond='data:view.isMultipleItems and data:view.isHomepage'>
+    <meta expr:content='data:blog.title' name='keywords'/>
+</b:if>    
+
+<b:if cond='data:view.isSingleItem'>
+    <meta expr:content='data:blog.pageName' name='keywords'/>
+</b:if>
+
+<b:if cond='data:view.isArchive and data:view.isLabelSearch and data:view.isSearch'>
+    <meta content='noindex,nofollow' name='robots'/>
+</b:if>
+
+<b:if cond='data:view.isPost'>
+    <meta expr:content='data:blog.pageName' property='og:title'/>
+    <meta content='article' property='og:type'/>
+<b:else/>
+    <meta expr:content='data:blog.pageTitle' property='og:title'/>
+    <meta content='website' property='og:type'/>
+</b:if>

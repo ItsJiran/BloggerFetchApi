@@ -1,4 +1,52 @@
 // +===============================================================+
+// ---------------------- BLOG UNITS PRINTER -----------------------
+// +===============================================================+
+class UnitEvent{
+	constructor(object = {}){
+		this.trigger = object.trigger ? object.trigger : 'click';
+		this.handler = object.handler ? object.handler : (e)=>{console.log(e)};
+	}
+}
+class UnitEvents{
+	constructor(object = {}){
+		// target should be class or id or query selector
+		this.selector = object.selector ? object.selector : '';
+		this.events = object.events ? object.events : [];
+	}
+	execute(elements){
+		// expect a nodelist
+		for(let element of elements)
+			for(let event of this.events)
+				element.addEventListener(event.trigger,event.handler);
+	}
+	executeSelf(element){
+		for(let event of this.events)
+				element.addEventListener(event.trigger,event.handler);
+	}
+}
+class UnitElements{
+	constructor(object = {}){
+		this.selector = object.selector ? object.selector : '';
+		this.elements = object.elements ? object.elements : [];
+	}
+	execute(elements = []){
+		// expect a nodelist
+		for(let element of elements)
+			for(let subelement of this.elements)
+				element.appendChild(subelement);
+	}
+	executeSelf(element){
+		for(let subelement of this.elements)
+			element.appendChild(subelement);
+	}
+}
+
+// +===============================================================+
+// --------------------- BLOG UNITS INSTANCE -----------------------
+// +===============================================================+
+
+
+// +===============================================================+
 // ---------------------- BLOG SEARCH ENTITY -----------------------
 // +===============================================================+
 class BlogPostEntity{
@@ -14,18 +62,22 @@ class BlogPostEntity{
 	*/
 	constructor(entry){
 		this.authors      = this.buildAuthors(entry.author);  
+		this.title        = entry.title.$t;
 		this.content      = entry.content.$t;
 		this.content_type = entry.content.type;
 		this.published    = entry.published.$t;
 		this.updated 	  = entry.updated.$t;	
 		this.links        = entry.link;
 
-		this.embeds = ['published','content','updated','link'];
-		this.embeds_element = [
-
-		];
-
 		this.buildElements();
+
+		this.embeds = ['published','content','updated','link','title'];
+		this.unit_elements = [
+			new UnitElements({
+				selector : '',
+				elements :	this.elements.children,
+			})
+		];
 	}
 	buildAuthors(authors){
 		let cont = [];
@@ -34,8 +86,7 @@ class BlogPostEntity{
 		return cont;
 	}
 	buildElements(){
-		this.elements = document.createElement('div');
-		
+		this.elements = new DOMParser().parseFromString(this.content, 'text/html').body;
 	}
 }
 class BlogAuthorEntity{
@@ -46,7 +97,6 @@ class BlogAuthorEntity{
 	uri      : {$t: 'http://www.blogger.com/profile/07000369991075541029'}
 	*/
 	constructor(author_entry){
-		super(author_entry);
 		this.email = author_entry.email.$t;
 		this.image = author_entry.gd$image;
 		this.name  = author_entry.name.$t;
@@ -63,55 +113,20 @@ class BlogAuthorEntity{
 
 
 // +===============================================================+
-// ---------------------- BLOG UNITS PRINTER -----------------------
-// +===============================================================+
-class UnitEvent{
-	constructor(object = {}){
-		this.trigger = object.trigger ? object.trigger : 'click';
-		this.handler = object.handler ? object.handler : (e)=>{console.log(e)};
-	}
-}
-class UnitEvents{
-	constructor(object = {}){
-		// target should be class or id or query selector
-		this.selector = object.selector ? object.selector : '';
-		this.events = [];
-	}
-	execute(elements){
-		// expect a nodelist
-		for(let element of elements)
-			for(let event of this.events)
-				element.addEventListener(event.trigger,event.handler);
-	}
-}
-class UnitElements{
-	constructor(object = {}){
-		this.selector = object.selector ? object.selector : '';
-		this.elements = [];
-	}
-	execute(elements){
-		// expect a nodelist
-		for(let element of elements)
-			for(let subelement of this.elements)
-				element.appendChild(subelement);
-	}
-}
-
-// +===============================================================+
 // --------------------- BLOG SEARCH PRINTER -----------------------
 // +===============================================================+
 class Printer{
 	constructor(object = {}){
 		this.container = object.container ? object.container : document.getElementById('BSearch-container');
 		this.template  = object.template ? object.template : `<div></div>`;
-		this.events = object.events ? object.events : [];
+		this.unit_events = object.unit_events ? object.unit_events : [];
 	}
 
 	// +----------- BUILDING FEATURE ------------+
 	build(entity){
 		// implement your print method here
 		let raw      = this.buildTemplate(entity);
-		let element  = this.buildElements(raw,entity)
+		let element  = this.buildElement(raw,entity)
 		let finished = this.buildAdditional(element,entity);
 		return finished;
 	}
@@ -124,13 +139,14 @@ class Printer{
 		return new DOMParser().parseFromString(raw, 'text/html').body.firstElementChild;
 	}
 	buildAdditional(element,entity){
-		element = this.addEvents(element);
-		element = this.addEmbedsElements(entity);
+		element = this.addEvents(element,entity);
+		element = this.addEmbedsElements(element,entity);
 		return element;
 	}
 
 	// +----------- FINISHING FEATURE ------------+
 	print(element,container = this.container){
+		console.log(element,container);
 		container.appendChild(element);
 	}
 
@@ -138,7 +154,7 @@ class Printer{
 	addEmbeds(raw = this.template, entity){
 		// this method replace {{keys}}
 		for(let key of entity.embeds){
-			raw = raw.replaceAll('{{'+key+'}}',entity);
+			raw = raw.replaceAll('{{'+key+'}}',entity[key]);
 		}
 		return raw;
 	}
@@ -146,27 +162,36 @@ class Printer{
 		// this method target an element that exist in the entity.embeds_element
 		// that list all the elements, that will be get from the entity.
 		// elements and put it in the targeted element argument.
-		for(let unit of entity.embeds_element){
-			let queries = element.querySelectorAll(unit.selector);
-			for(let query of queries){
-				unit.execute(query);
+		for(let unit of entity.unit_elements){
+			if(unit.selector == ''){
+				unit.executeSelf(element);
+			} else {
+				let queries = element.querySelectorAll(unit.selector);
+				unit.execute(queries);			
 			}
 		}
+		return element;
 	}
 	addEvents(element){
 		// this method print the targeted event to the element
-		for(let unit of this.events){
-			let queries = element.querySelectorAll(unit.selector);
-			for(let query of queries){
-				unit.execute(query);
+		for(let unit of this.unit_events){
+			if(unit.selector == ''){
+				unit.executeSelf(element);
+			} else {
+				let queries = element.querySelectorAll(unit.selector);			
+				unit.execute(queries);	
 			}
 		}
+		return element;
 	}
 }
 class BlogPostPrinter extends Printer{
 	constructor(object = {}){
 		super(object);
 		this.template = object.template ? object.template : `
+			<article>
+				{{title}}
+			</article>
 		`;
 		this.events = object.events ? object.events : {
 
@@ -197,15 +222,15 @@ class Queries {
 		};
 	}
 	build(object = {}){
-		for( let key in Object.fromEntries(object.entries()) ) {
+		for( let key in object ) {
 			this.setQueries( key, object[key] );
 		}
-	}
+	}	
 	buildByUrl(path = window.location.search){
 		const params = new URLSearchParams(window.location.search);
 		for ( let key in this.queries ) {
 			if( params.get(key) != undefined ) 
-				this.setQueries( key,params.get(key) );
+				this.setQueries( key, params.get(key) );
 		}
 	}	
 
@@ -305,7 +330,7 @@ class Queries {
 	fillValidation(key,value){
 		return true;
 	}
-	validation( key,value ) {
+	validation(key,value) {
 		return true;
 	}
 	middleware(key, value){
@@ -364,25 +389,25 @@ class BlogPagination extends Queries {
 	// on blog pagination this method should expect a response object
 	// because this class need the data of the total post that provided by the
 	// blogger rss feeds.
-	buildByFeeds(response = {}){
-		if(response.feed) throw Error("response feeds property shouldn't empty");
+	buildByFeed(response = {}){
+		if(response.feed == undefined) throw Error("response feeds property shouldn't empty");
 
 		// we expect an response.feed object
-		let feeds = response.feed;
+		let feed = response.feed;
 
 		// we start consuming this object proerty		
 		// openSearch$itemsPerPage : {$t: '2'}
 		// openSearch$startIndex   : {$t: '1 }
 		// openSearch$totalResults : {$t: '4'}
-		let totalResults = feeds.openSearch$totalResults;
-		let startIndex   = feeds.openSearch$startIndex;
-		let itemsPerPage = feeds.openSearch$itemsPerPage;
+		let totalResults = feed.openSearch$totalResults;
+		let startIndex   = feed.openSearch$startIndex;
+		let itemsPerPage = feed.openSearch$itemsPerPage;
 
 		// Formula 
 		// the goal is to calculate itemsPerPage / startIndex / Total Result -> CurrentPage / TotalPage
 		// TotalPage         = total_result / items_perpage
 		// CurrentPage_Index = TotalPage + 1 
-		this.setQueries('total_page', totalResults / itemPerPage);
+		this.setQueries('total_page', totalResults / itemsPerPage);
 		this.setQueries('total_results', totalResults);
 	}
 }
@@ -391,6 +416,7 @@ class BlogSearchQueries extends Queries {
 	init(object = {}){
 		this.queries = {
 			title : '',
+			alt   : 'json',
 			...object
 		}
 	}
@@ -398,6 +424,10 @@ class BlogSearchQueries extends Queries {
 		this.rules = {
 			title : {
 				fill:true,
+				fillApi:true,
+			},
+			alt : {
+				fill:false,
 				fillApi:true,
 			},
 			...object
@@ -417,7 +447,7 @@ class BlogSearchQueries extends Queries {
 // +===============================================================+
 class BlogSearch{
 	constructor( object = {} ){
-		this.BlogSearchInfo    = new BlogSearchInfo( object );
+		this.BlogSearchInfo    = new BlogSearchInfo( object.location );
 		this.BlogSearchApi     = new BlogSearchApi( this.BlogSearchInfo );
 		this.BlogSearchQueries = new BlogSearchQueries( object.search_settings );
 
@@ -429,9 +459,12 @@ class BlogSearch{
 		this.posts_container      = object.posts_container ? object.posts_container : document.getElementById('BSearch-posts_container');
 		this.pagination_container = object.pagination_container ? object.pagination_container : document.getElementById('BSearch-pagination_container');
 
+		// printer instance
+		this.posts_printer = object.posts_printer ? object.posts_printer : new BlogPostPrinter();
+
 		// build the each queries from the current window params
-		this.BlogSearchQueries.build();
-		this.BlogPagination.build();
+		this.BlogSearchQueries.buildByUrl();
+		this.BlogPagination.buildByUrl();
 	}
 
 	async run(){
@@ -454,6 +487,7 @@ class BlogSearch{
 		// handle response feed;
 		this.buildPostEntity(response);
 		this.buildPaginationEntity(response);
+		console.log(this.BlogPosts);
 
 		// print entity to the dom
 		this.printEntity();
@@ -465,16 +499,23 @@ class BlogSearch{
 		return path;	
 	}
 	buildPostEntity(response){
-		for(let posts of response.feeds.entry){
-			
+		if(response.feed.entry == undefined) return;
+		for(let post of response.feed.entry){
+			this.BlogPosts.push(new BlogPostEntity(post))
 		}	
 	}
 	buildPaginationEntity(response){
-		this.BlogPagination.buildByFeeds(response);
+		this.BlogPagination.buildByFeed(response);
 	}
 
+	printEntity(){
+		for(let post of this.BlogPosts){
+			let element = this.posts_printer.build(post);
+			this.posts_printer.print(element);
+		}	
+	}
 	resetEntity(){
-		this.BlogPosts  = [];
+		this.BlogPosts = [];
 	}
 }
 class BlogSearchInfo{
@@ -531,6 +572,5 @@ class BlogSearchApi{
 // +===============================================================+
 // ------------------------ BLOG RUNTIME ---------------------------
 // +===============================================================+
-
-console.log('test');
-new BlogSearch().run();
+let Main = new BlogSearch();
+Main.run();
