@@ -32,8 +32,14 @@ class UnitProperties extends UnitPrinter{
 		this.properties = object.properties ? object.properties : [];
 	}
 	executeSelf(element){
-		for(let event of this.events)
-			element.addEventListener(event.trigger,event.handler);
+		for(let property of this.properties)
+			element.setAttribute(property.name,property.value);
+	}
+}
+class UnitProperty{
+	constructor(name,value){
+		this.name  = name;
+		this.value = value;
 	}
 }
 
@@ -61,30 +67,46 @@ class UnitElements extends UnitPrinter{
 	}
 	executeSelf(element){
 		for(let subelement of this.elements){
-			if(NodeList.prototype.isPrototypeOf(subelement))
+			if(subelement instanceof UnitElement)
+				this.executeElement(element,subelement)
+			else if(NodeList.prototype.isPrototypeOf(subelement))
 				for(let sub of subelement) element.appendChild(sub);
-			else
+			else 
 				element.appendChild(subelement);
 		}
 	}
+	executeElement(element,subelement){
+		for(let rule of subelement.rules){
+			// implement rule
+		}
+	}
 }
-
+class UnitElement{
+	constructor(object = {}){
+		this.rules = object.rules ? object.rules : [];
+	}
+}
 
 // +===============================================================+
 // --------------------- BLOG UNITS INSTANCE -----------------------
 // +===============================================================+
 class UnitElementsPosts extends UnitElements{
 	build(post_entity){
+		this.elements = []; // reset
 		this.elements = [
-			new UnitElements({
-				selector : '',
-				elements :	post_entity.elements.getElementsByTagName('p'),
-			})
+			// put elements tags
+			...post_entity.elements.getElementsByTagName('p'),			
+			...post_entity.elements.getElementsByTagName('img'),			
 		];
 	}
 }
 class UnitEventPosts extends UnitEvents{
+	constructor(object = {}){
+		super(object);
+		this.events = object.events ? object.events : [
 
+		];
+	}
 }
 
 // +===============================================================+
@@ -476,6 +498,13 @@ class BlogSearchQueries extends Queries {
 // +===============================================================+
 // ------------------------ BLOG SEARCH ----------------------------
 // +===============================================================+
+class PrinterFacade{
+	
+}
+
+// +===============================================================+
+// ------------------------ BLOG SEARCH ----------------------------
+// +===============================================================+
 class BlogSearch{
 	constructor( object = {} ){
 		this.BlogSearchInfo    = new BlogSearchInfo( object.location );
@@ -494,6 +523,10 @@ class BlogSearch{
 		this.posts_printer      = object.posts_printer      ? object.posts_printer : new BlogPostPrinter();
 		this.pagination_printer = object.pagination_printer ? object.pagination_printer : new BlogPaginationPrinter();
 		this.empty_printer      = object.empty_printer      ? object.empty_printer : new BlogPostsEmptyPrinter();
+
+		// printer units 
+		this.unit_element_post = new UnitElementsPosts();
+		this.unit_event_post   = new UnitEventPosts();
 
 		// build the each queries from the current window params
 		this.BlogSearchQueries.buildByUrl();
@@ -545,24 +578,16 @@ class BlogSearch{
 	}
 
 	printPostsEntity(){
-		// unit elements
-		let embed_post = new UnitElementsPosts({
-					
-		});
-		let event_post = new UnitEventPosts({
-					
-		});
-
 		for(let post of this.BlogPosts){
 			// building the element
 			let element = this.posts_printer.build(post);
 
-			// building the embedded element
-			embed_post.build(post.elements)
-			element = this.posts_printer.addUnits( element, [embed_post] );
+			// building the unitt
+			this.unit_element_post.build(post);
 
-			// building the embedded events
-			element = this.posts_printer.addUnits( element, [event_post] );
+			// print the unit to the element
+			element = this.posts_printer.addUnits( element, [this.unit_element_post] );
+			element = this.posts_printer.addUnits( element, [this.unit_event_post] );
 
 			// print the element
 			this.posts_printer.print(element);
