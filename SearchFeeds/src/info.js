@@ -38,7 +38,7 @@ class BlogSearchApi {
             redirect: "follow",
             referrerPolicy: "no-referrer",
         });
-        return response.json();
+        return response;
     }
     build(blog_info, api_queries = '?') {
         if (blog_info instanceof BlogSearchInfo == false)

@@ -1,5 +1,6 @@
 const gulp = require('gulp');
 const concat = require('gulp-concat');
+const terser = require('gulp-terser');
 const { watch } = require('gulp');
 
 function build() {
@@ -12,6 +13,7 @@ function build() {
         'src/index.js',
         // etc...
     ])
+        .pipe(terser())
         .pipe(concat('bundle.js'))
         .pipe(gulp.dest('dist'));
 }

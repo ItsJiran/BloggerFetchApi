@@ -142,7 +142,7 @@ class BlogPagination extends Queries {
         this.queries = {
             current_page: 1,
             start_index: 1,
-            max_results: 1,
+            max_results: 10,
             total_results: -1,
             ...object
         }
@@ -178,6 +178,13 @@ class BlogPagination extends Queries {
         }
     }
 
+    setQueries(key, value) {
+        if (key == 'current_page')
+            this.queries[key] = parseInt(value);
+        else if (this.validation(key, value))
+            this.queries[key] = value;
+    }
+
     // middleware
     middleware(key, value) {
         if (key == 'start_index')
@@ -198,15 +205,15 @@ class BlogPagination extends Queries {
         // openSearch$itemsPerPage : {$t: '2'}
         // openSearch$startIndex   : {$t: '1 }
         // openSearch$totalResults : {$t: '4'}
-        let totalResults = feed.openSearch$totalResults.$t;
-        let startIndex = feed.openSearch$startIndex.$t;
-        let itemsPerPage = feed.openSearch$itemsPerPage.$t;
+        let totalResults = parseInt(feed.openSearch$totalResults.$t);
+        let startIndex = parseInt(feed.openSearch$startIndex.$t);
+        let itemsPerPage = parseInt(feed.openSearch$itemsPerPage.$t);
 
         // Formula 
         // the goal is to calculate itemsPerPage / startIndex / Total Result -> CurrentPage / TotalPage
         // TotalPage         = total_result / items_perpage
         // CurrentPage_Index = TotalPage + 1 
-        this.setQueries('total_page', Math.round(totalResults / itemsPerPage));
+        this.setQueries('total_page', Math.ceil(totalResults / itemsPerPage));
         this.setQueries('total_results', totalResults);
     }
 }

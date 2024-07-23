@@ -20,7 +20,7 @@ class BlogPostEntity {
     updated   : {$t: '2024-06-27T21:32:54.257-07:00'}
     */
     constructor(entry) {
-        this.title = entry.title.$t;
+        this.title = entry.title.$t == '' ? "Undefined Title" : entry.title.$t;
         this.content = entry.content.$t;
         this.content_type = entry.content.type;
         this.published = entry.published.$t;
@@ -38,11 +38,11 @@ class BlogPostEntity {
     }
     buildLink() {
         for (let link of this.links) {
-            if (link.title == this.title) {
+            if (link.rel == "alternate") {
                 return link.href;
             }
         }
-        return link[3].href;
+        return "#";
     }
     buildTerm(entry) {
         let container = [];
@@ -70,10 +70,13 @@ class BlogPostEntity {
         let thumbnail_element = elements.getElementsByClassName('search-posts-thumbnail')[0];
         let first_img_element = elements.getElementsByTagName('img')[0];
         // return default no image found
-        if (thumbnail_element == undefined && first_img_element == undefined) return 'img not found';
+        if (thumbnail_element == undefined && first_img_element == undefined)
+            return 'https://2.bp.blogspot.com/-dEUogHGF5yU/Wu0UW3B8JMI/AAAAAAAAJ-0/b5QVUcmL1nUvP0BGa0PX4rA8UyFhlvVIQCLcBGAs/s340/lina.jpg';
         // search thumbnail
-        if (thumbnail_element != undefined) return thumbnail_element.src;
-        if (first_img_element != undefined) return first_img_element.src;
+        if (thumbnail_element != undefined)
+            return thumbnail_element.src;
+        if (first_img_element != undefined)
+            return first_img_element.src;
     }
     buildAuthors(authors) {
         let cont = [];
