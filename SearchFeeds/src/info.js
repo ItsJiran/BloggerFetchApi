@@ -51,8 +51,3 @@ class BlogSearchApi {
         this.url = blog_info.origin + this.target + this.path + api_queries;
     }
 }
-
-module.exports = {
-    BlogSearchInfo,
-    BlogSearchApi
-}

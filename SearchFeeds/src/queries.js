@@ -239,9 +239,3 @@ class BlogSearchQueries extends Queries {
         return true;
     }
 }
-
-module.exports = {
-    Queries,
-    BlogPagination,
-    BlogSearchQueries
-}

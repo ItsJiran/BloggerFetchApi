@@ -3,6 +3,8 @@
 // +===============================================================+
 class Builder {
     static template = '';
+
+    // builder
     static build(entity) {
         // implement your print method here
         let raw = this.buildTemplate(entity);
@@ -17,12 +19,31 @@ class Builder {
     static buildElement(raw = this.buildTemplate()) {
         return new DOMParser().parseFromString(raw, 'text/html').body.firstElementChild;
     }
+
+    // embbeder
     static addEmbeds(raw = this.template, entity = {}) {
         if (entity.embeds == undefined) return raw;
         for (let key of entity.embeds) {
             raw = raw.replaceAll('{{' + key + '}}', entity[key]);
         }
         return raw;
+    }
+
+    // slot manipulator
+    static getSlots(raw = this.template) {
+        return preg_match_all(/\[\[(?![^\]]*\/\])[^\]]*\]\]/, raw);
+    }
+    static addSlot(original = this.template, slot_template = '', slotKey = '') {
+        if (slotKey == '') return;
+        // replace every = [[slot]]
+        let slots = this.getSlots(raw);
+        for (let slot of slots) {
+
+        }
+        return
+    }
+    static cleanSlot(raw = this.template) {
+
     }
 }
 class PostBuilder extends Builder {
@@ -37,6 +58,7 @@ class PostBuilder extends Builder {
                             </div>
                         </div>							
                         <div class="box-body-deg">
+                            [[post-label]]
                             <h2 class="post-title entry-title" itemprop="name headline">
                                 <a href="{{link}}" itemprop="url" title="{{title}}">{{title}}</a>
                             </h2>
@@ -66,12 +88,4 @@ class EmptyPosts extends Builder {
     static template = `
         <div class='empty'>Empty Blog Posts</div>
     `
-}
-
-module.exports = {
-    Builder,
-    EmptyPosts,
-    PostBuilder,
-    PostLabelBuilder,
-    PaginationLink,
 }

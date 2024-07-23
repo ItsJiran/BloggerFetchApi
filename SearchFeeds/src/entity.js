@@ -115,10 +115,3 @@ class BlogAuthorEntity {
         ]
     }
 }
-
-module.exports = {
-    BlogPostEntity,
-    BlogAuthorEntity,
-    BlogsLabelEntity,
-    BlogPaginationEntity,
-}

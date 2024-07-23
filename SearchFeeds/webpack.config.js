@@ -5,10 +5,13 @@ module.exports = {
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),
+        libraryTarget: 'var',
+        library: 'YourLibraryNameHere'
     },
     resolve: {
         extensions: ['', '.js', '.jsx', '.ts']
     },
+    devtool: 'inline-source-map',
     module: {
         rules: [
             {

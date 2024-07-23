@@ -1,25 +1,3 @@
-import {
-    Builder,
-    EmptyPosts,
-    PostBuilder,
-    PostLabelBuilder,
-    PaginationLink,
-} from "./builder";
-import {
-    BlogPostEntity,
-    BlogAuthorEntity,
-    BlogsLabelEntity,
-    BlogPaginationEntity,
-} from "./entity";
-import {
-    BlogSearchInfo,
-    BlogSearchApi
-} from "./info";
-import {
-    Queries,
-    BlogPagination,
-    BlogSearchQueries
-} from "./queries";
 
 // +===============================================================+
 // ------------------------ BLOG SEARCH ----------------------------
@@ -97,7 +75,7 @@ class BlogSearch {
                 // print aditional element
                 if (post.labels >= 1) {
                     let label_element = PostLabelBuilder.build(post.labels[0]);
-                    element.getElementsByTagName('h2')[0].insertBefore();
+                    element.getElementsByTagName('h2')[0].insertBefore('');
                 }
                 this.posts_container.appendChild(element);
             }
@@ -138,3 +116,4 @@ class BlogSearch {
 // +===============================================================+
 let Main = new BlogSearch();
 Main.run();
+console.log(PostBuilder.getSlots())
